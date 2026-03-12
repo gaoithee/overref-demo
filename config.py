@@ -63,10 +63,10 @@ DATASETS: dict[str, DatasetConfig] = {
     # Mix of safe (0) and harmful (1) prompts
     "false_reject": DatasetConfig(
         name="False Reject",
-        hf_path=None,
-        local_path="data/false_reject.json",  # download manually if needed
+        hf_path="AmazonScience/FalseReject",
+        hf_split="test",          # 1,187 human-annotated safe prompts
         prompt_column="prompt",
-        label_column="label",
+        label_column=None,        # all safe; label=0 assigned automatically
         max_samples=500,
     ),
 }

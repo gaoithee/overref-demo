@@ -69,54 +69,41 @@ def load_or_bench(
 # ---------------------------------------------------------------------------
 
 def load_false_reject(
-    local_path: str = "data/false_reject.json",
+    hf_path: str = "AmazonScience/FalseReject",
+    split: str = "test",
     max_samples: Optional[int] = None,
 ) -> pd.DataFrame:
     """
-    Load the False Reject benchmark from a local JSON file.
+    Load the FalseReject benchmark from HuggingFace (AmazonScience/FalseReject).
 
-    Expected JSON format (list of objects):
-        [{"prompt": "...", "label": 0|1, "category": "..."}, ...]
+    All prompts are safe (benign but high-risk-looking) -> label = 0.
+    The test split has 1,187 human-annotated prompts across 44 safety categories.
+    The train split has 14,624 entries with instruct_response / cot_response columns.
 
-    label = 0 → safe (over-refusal candidate)
-    label = 1 → harmful (under-refusal candidate)
+    Reference: https://arxiv.org/abs/2505.08054
     """
-    path = Path(local_path)
-    if not path.exists():
-        logger.warning(
-            "False Reject file not found at %s. "
-            "Download it and place it at that path.",
-            local_path,
-        )
-        return pd.DataFrame(columns=["prompt", "label", "category", "source"])
+    try:
+        from datasets import load_dataset  # type: ignore
+    except ImportError:
+        raise ImportError("Install `datasets`: pip install datasets")
 
-    logger.info("Loading False Reject from %s…", local_path)
-
-    suffix = path.suffix.lower()
-    if suffix == ".json":
-        with open(path) as f:
-            data = json.load(f)
-        df = pd.DataFrame(data)
-    elif suffix in (".csv", ".tsv"):
-        sep = "\t" if suffix == ".tsv" else ","
-        df = pd.read_csv(path, sep=sep)
-    else:
-        raise ValueError(f"Unsupported file format: {suffix}")
+    logger.info("Loading FalseReject from HuggingFace (%s / %s)...", hf_path, split)
+    ds = load_dataset(hf_path, split=split)
+    df = ds.to_pandas()
 
     prompt_col   = _find_column(df, ["prompt", "text", "question", "input"])
-    label_col    = _find_column(df, ["label", "is_harmful", "harmful"], required=False)
-    category_col = _find_column(df, ["category", "domain", "type"],    required=False)
+    category_col = _find_column(df, ["category", "domain", "type"], required=False)
 
     out = pd.DataFrame()
     out["prompt"]   = df[prompt_col]
-    out["label"]    = df[label_col].astype(int) if label_col else 0
+    out["label"]    = 0   # all prompts are safe (over-refusal benchmark)
     out["category"] = df[category_col] if category_col else "unknown"
     out["source"]   = "false_reject"
 
     if max_samples:
         out = out.sample(n=min(max_samples, len(out)), random_state=42)
 
-    logger.info("False Reject: %d prompts loaded", len(out))
+    logger.info("FalseReject: %d prompts loaded", len(out))
     return out.reset_index(drop=True)
 
 
@@ -139,7 +126,8 @@ def load_dataset_from_config(cfg) -> pd.DataFrame:
         )
     elif cfg.name == "False Reject":
         df = load_false_reject(
-            local_path=cfg.local_path,
+            hf_path=cfg.hf_path,
+            split=cfg.hf_split,
             max_samples=cfg.max_samples,
         )
     else:
