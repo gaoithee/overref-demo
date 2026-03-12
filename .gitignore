@@ -1,3 +1,6 @@
 .venv/
+.venv-olmo23/
+
+
 __pycache__/
 slurm_outputs/

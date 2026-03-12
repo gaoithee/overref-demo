@@ -144,5 +144,5 @@ GENERATION: GenerationConfig = GenerationConfig()
 # Output
 # ---------------------------------------------------------------------------
 
-RESULTS_DIR: str = "results"        # directory where CSV/JSON results are saved
+RESULTS_DIR: str = "results/olmo1"
 LOG_LEVEL: str = "INFO"
