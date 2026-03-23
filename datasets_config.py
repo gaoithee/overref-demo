@@ -37,85 +37,74 @@ class DatasetConfig:
 # ---------------------------------------------------------------------------
 
 OR_BENCH = DatasetConfig(
-    name="OR-Bench",
+    name="or_bench", # Uniformato
     dataset_type="over_refusal",
     hf_path="bench-llm/or-bench",
-    hf_split="train",       # OR-Bench only has a "train" split
+    hf_split="train",
     prompt_column="prompt",
-    label_column=None,      # all safe → label=0 assigned automatically
     max_samples=500,
 )
 
 FALSE_REJECT = DatasetConfig(
-    name="False Reject",
+    name="false_reject", # Uniformato
     dataset_type="over_refusal",
     hf_path="AmazonScience/FalseReject",
     hf_split="test",
     prompt_column="prompt",
-    label_column=None,      # all safe → label=0 assigned automatically
     max_samples=500,
 )
-
 
 # ---------------------------------------------------------------------------
 # Harmful benchmarks  (label = 1, FN measurement)
 # ---------------------------------------------------------------------------
 
 HARMBENCH = DatasetConfig(
-    name="HarmBench",
+    name="harmbench",
     dataset_type="harmful",
     hf_path="allenai/tulu-3-harmbench-eval",
-    hf_split="train",
+    hf_split="test", # CORRETTO (era train)
     prompt_column="prompt",
-    label_column=None,      # all harmful → label=1 assigned automatically
-    max_samples=None,       # ~200 prompts, use all
 )
 
 JAILBREAKBENCH = DatasetConfig(
-    name="JailbreakBench",
+    name="jailbreakbench",
     dataset_type="harmful",
     hf_path="JailbreakBench/JBB-Behaviors",
-    hf_split="train",
+    hf_split="behaviors", # TECNICA: Molti loader HF usano lo split come config se il secondo parametro è None
     prompt_column="Goal",
-    label_column=None,      # all harmful → label=1 assigned automatically
-    max_samples=None,       # 100 prompts, use all
 )
-
 
 # ---------------------------------------------------------------------------
 # Mixed benchmarks  (label = 0 and 1, FP + FN measurement)
 # ---------------------------------------------------------------------------
 
 WILDGUARD = DatasetConfig(
-    name="WildGuard",
+    name="wildguard",
     dataset_type="mixed",
     hf_path="allenai/wildguardmix",
-    hf_split="test",
-    prompt_column="prompt",
-    label_column="prompt_harm_label",   # "harmful" → 1, "unharmful" → 0
-    max_samples=1000,       # stratified: 500 safe + 500 harmful
+    hf_split="test", # Verificato
+    label_column="prompt_harm_label",
+    max_samples=1000,
 )
 
 TOXICCHAT = DatasetConfig(
-    name="ToxicChat",
+    name="toxicchat", # Uniformato
     dataset_type="mixed",
     hf_path="lmsys/toxic-chat",
     hf_split="test",
     prompt_column="user_input",
-    label_column="toxicity",            # 1 = toxic/harmful, 0 = safe
-    max_samples=500,        # stratified: 250 safe + 250 harmful
+    label_column="toxicity",
+    max_samples=500,
 )
 
 BEAVERTAILS = DatasetConfig(
-    name="BeaverTails",
+    name="beavertails",
     dataset_type="mixed",
     hf_path="PKU-Alignment/BeaverTails",
-    hf_split="test",
-    prompt_column="prompt",
-    label_column="is_safe",             # is_safe=False → label=1 (harmful)
-    max_samples=1000,       # stratified: 500 safe + 500 harmful
+    hf_split="30k_test", # CORRETTO (era test)
+    label_column="is_safe",
+    max_samples=1000,
 )
-
 
 # ---------------------------------------------------------------------------
 # Canonical registry
@@ -123,13 +112,10 @@ BEAVERTAILS = DatasetConfig(
 
 # All datasets, grouped by type — for easy reference in configs and scripts
 ALL_DATASETS: dict[str, DatasetConfig] = {
-    # over-refusal
     "or_bench":       OR_BENCH,
     "false_reject":   FALSE_REJECT,
-    # harmful
     "harmbench":      HARMBENCH,
     "jailbreakbench": JAILBREAKBENCH,
-    # mixed
     "wildguard":      WILDGUARD,
     "toxicchat":      TOXICCHAT,
     "beavertails":    BEAVERTAILS,

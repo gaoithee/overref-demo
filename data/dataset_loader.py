@@ -132,25 +132,26 @@ def load_beavertails(cfg: DatasetConfig) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 _LOADER_MAP = {
-    "OR-Bench":      load_or_bench,
-    "False Reject":  load_false_reject,
-    "WildGuard":     load_wildguard,
-    "HarmBench":     load_harmbench,
-    "JailbreakBench": load_jailbreakbench,
-    "ToxicChat":     load_toxicchat,
-    "BeaverTails":   load_beavertails,
+    "or_bench":       load_or_bench,
+    "false_reject":   load_false_reject,
+    "wildguard":      load_wildguard,
+    "harmbench":      load_harmbench,
+    "jailbreakbench": load_jailbreakbench,
+    "toxicchat":      load_toxicchat,
+    "beavertails":    load_beavertails,
 }
 
 
 def load_dataset_from_config(cfg: DatasetConfig) -> pd.DataFrame:
-    loader = _LOADER_MAP.get(cfg.name)
+    target_key = cfg.name.lower().replace(" ", "_").replace("-", "_")
+    loader = _LOADER_MAP.get(target_key)
+    
     if loader is None:
         raise ValueError(
-            f"No loader for dataset '{cfg.name}'. "
+            f"No loader for dataset '{cfg.name}' (key: {target_key}). "
             f"Available: {list(_LOADER_MAP.keys())}"
         )
     return loader(cfg)
-
 
 def load_all_datasets(dataset_configs: dict) -> pd.DataFrame:
     """
@@ -180,14 +181,12 @@ def load_all_datasets(dataset_configs: dict) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 def _hf_load(path: str, config_name: Optional[str], split: str):
-    try:
-        from datasets import load_dataset
-    except ImportError:
-        raise ImportError("Install `datasets`: pip install datasets")
+    from datasets import load_dataset
+    if "JBB-Behaviors" in path:
+        return load_dataset(path, "behaviors", split="train")
     if config_name:
         return load_dataset(path, config_name, split=split)
     return load_dataset(path, split=split)
-
 
 def _col(df: pd.DataFrame, candidates: list[str], required: bool = True) -> Optional[str]:
     for c in candidates:
